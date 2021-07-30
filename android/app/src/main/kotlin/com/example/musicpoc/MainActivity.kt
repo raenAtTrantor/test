@@ -12,56 +12,62 @@ import android.graphics.Color
 import android.os.BatteryManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
+import android.app.ActivityManager
 
 
-
-class MainActivity: FlutterActivity() {
+class MainActivity : FlutterActivity() {
     private val CHANNEL = "battery"
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
-            call, result ->
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            CHANNEL
+        ).setMethodCallHandler { call, result ->
             if (call.method == "getBatteryLevel") {
-                startMusic()
-//                val batteryLevel = getBatteryLevel()
-//
-//                if (batteryLevel != -1) {
-//                    result.success(batteryLevel)
-//                } else {
-//                    result.error("UNAVAILABLE", "Battery level not available.", null)
-//                }
+                if (isMyServiceRunning(BackgroundSoundService::class.java)) {
+                    val musicStarted = stopMusic()
+                    result.success(musicStarted)
+                } else {
+                    val musicStarted = startMusic()
+                    result.success(musicStarted)
+                }
             } else {
                 result.notImplemented()
             }
         }
     }
 
-    private fun getBatteryLevel(): Int {
-        val batteryLevel: Int
-        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-            val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-            batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-        } else {
-            val intent = ContextWrapper(applicationContext).registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
-            batteryLevel = intent!!.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100 / intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+    private fun startMusic(): Boolean {
+        try {
+            val myService = Intent(this@MainActivity, BackgroundSoundService::class.java)
+            startService(myService)
+            return true
+        } catch (e: Exception) {
+            return false
         }
 
-        return batteryLevel
     }
 
-    private fun startMusic() {
-        val myService = Intent(this@MainActivity, BackgroundSoundService::class.java)
-        startService(myService)
-//        btnPlay?.text = "Stop"
-//        textView?.setTextColor(Color.parseColor("#FF0000"))
+    private fun stopMusic(): Boolean {
+        try {
+            val myService = Intent(this@MainActivity, BackgroundSoundService::class.java)
+            stopService(myService)
+            return true
+        } catch (ex: Exception) {
+            return false
+        }
+
     }
 
-    private fun stopMusic() {
-        val myService = Intent(this@MainActivity, BackgroundSoundService::class.java)
-        stopService(myService)
-//        btnPlay?.text = "Start"
-//        textView?.setTextColor(Color.parseColor("#0000FF"))
+    private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
+        val manager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
     }
 
 }

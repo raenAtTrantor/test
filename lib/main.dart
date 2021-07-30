@@ -78,8 +78,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> playMusic() async {
     String batteryLevel;
     try {
-      final int result = await musicChannel.invokeMethod('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
+      final bool result = await musicChannel.invokeMethod('getBatteryLevel');
+      batteryLevel = 'Music Started at $result.';
     } on PlatformException catch (e) {
       batteryLevel = "Failed to get battery level: '${e.message}'.";
     }

@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.os.BatteryManager
 import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
@@ -22,13 +23,14 @@ class MainActivity: FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
             call, result ->
             if (call.method == "getBatteryLevel") {
-                val batteryLevel = getBatteryLevel()
-
-                if (batteryLevel != -1) {
-                    result.success(batteryLevel)
-                } else {
-                    result.error("UNAVAILABLE", "Battery level not available.", null)
-                }
+                startMusic()
+//                val batteryLevel = getBatteryLevel()
+//
+//                if (batteryLevel != -1) {
+//                    result.success(batteryLevel)
+//                } else {
+//                    result.error("UNAVAILABLE", "Battery level not available.", null)
+//                }
             } else {
                 result.notImplemented()
             }
@@ -46,6 +48,20 @@ class MainActivity: FlutterActivity() {
         }
 
         return batteryLevel
+    }
+
+    private fun startMusic() {
+        val myService = Intent(this@MainActivity, BackgroundSoundService::class.java)
+        startService(myService)
+//        btnPlay?.text = "Stop"
+//        textView?.setTextColor(Color.parseColor("#FF0000"))
+    }
+
+    private fun stopMusic() {
+        val myService = Intent(this@MainActivity, BackgroundSoundService::class.java)
+        stopService(myService)
+//        btnPlay?.text = "Start"
+//        textView?.setTextColor(Color.parseColor("#0000FF"))
     }
 
 }
